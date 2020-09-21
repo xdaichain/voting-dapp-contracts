@@ -9,8 +9,8 @@ contract VotingSpace {
     event ProposalCreated(uint256 id);
     event Voted(uint256 proposalId, address voter, uint256 optionId);
 
-    uint256 constant MIN_VOTING_DURATION = 50000; // in blocks
-    uint256 constant MAX_VOTING_DURATION = 500000; // in blocks
+    uint256 constant MIN_VOTING_DURATION = 259200; // in seconds (3 days)
+    uint256 constant MAX_VOTING_DURATION = 2592000; // in seconds (30 days)
     string public name;
     address[] public admins;
 
@@ -23,7 +23,7 @@ contract VotingSpace {
         string title;
         string description;
         string[] options;
-        uint256 startBlockNumber;
+        uint256 startTimestamp;
         uint256 duration;
         address creator;
     }
@@ -41,38 +41,58 @@ contract VotingSpace {
         string memory _title,
         string memory _description,
         string[] memory _options,
-        uint256 _startBlockNumber,
+        uint256 _startTimestamp,
         uint256 _duration
     ) public { // not external, because "string[] calldata" throws an error on compilation
         require(
-            _startBlockNumber >= block.number &&
+            _startTimestamp >= block.timestamp &&
             _duration >= MIN_VOTING_DURATION &&
             _duration <= MAX_VOTING_DURATION,
             "wrong start block number or duration"
         );
-        Proposal memory newProposal = Proposal(_title, _description, _options, _startBlockNumber, _duration, msg.sender);
+        Proposal memory newProposal = Proposal(_title, _description, _options, _startTimestamp, _duration, msg.sender);
         uint256 proposalId = proposals.length;
         proposals.push(newProposal);
         emit ProposalCreated(proposalId);
     }
 
-    function vote(uint256 _proposalId, uint256 _optionId) external {
+    function vote(uint256 _proposalId, uint256 _optionId, address _voter) external {
         require(_proposalId < proposals.length, "no such proposal");
         Proposal storage proposal = proposals[_proposalId];
         require(
-            block.number >= proposal.startBlockNumber &&
-            block.number <= proposal.startBlockNumber.add(proposal.duration),
+            block.timestamp >= proposal.startTimestamp &&
+            block.timestamp <= proposal.startTimestamp.add(proposal.duration),
             "not a voting time"
         );
-        uint256 voteIndex = votesIndexes[_proposalId][msg.sender];
-        if (votes[_proposalId][voteIndex].voter == msg.sender) {
+        // address voter = msg.sender;
+        address voter = _voter;
+        uint256 voteIndex = votesIndexes[_proposalId][voter];
+        if (votes[_proposalId][voteIndex].voter == voter) {
             votes[_proposalId][voteIndex].optionId = _optionId;
         } else {
-            Vote memory newVote = Vote(msg.sender, _optionId);
+            Vote memory newVote = Vote(voter, _optionId);
             voteIndex = votes[_proposalId].length;
             votes[_proposalId].push(newVote);
-            votesIndexes[_proposalId][msg.sender] = voteIndex;
+            votesIndexes[_proposalId][voter] = voteIndex;
         }
-        emit Voted(_proposalId, msg.sender, _optionId);
+        emit Voted(_proposalId, voter, _optionId);
+    }
+
+    function getProposal(uint256 _id) external view returns (
+        string memory title,
+        string memory description,
+        string[] memory options,
+        uint256 startTimestamp,
+        uint256 duration,
+        address creator
+    ) {
+        return (
+            proposals[_id].title,
+            proposals[_id].description,
+            proposals[_id].options,
+            proposals[_id].startTimestamp,
+            proposals[_id].duration,
+            proposals[_id].creator
+        );
     }
 }

@@ -1,6 +1,8 @@
 {
   "manifestVersion": "2.2",
-  "contracts": {},
+  "contracts": {
+    "VotingSpaceFactory": "VotingSpaceFactory"
+  },
   "dependencies": {},
   "name": "voting-dapp-contracts",
   "version": "1.0.0",
