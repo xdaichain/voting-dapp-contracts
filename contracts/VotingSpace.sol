@@ -67,7 +67,7 @@ contract VotingSpace {
         // address voter = msg.sender;
         address voter = _voter;
         uint256 voteIndex = votesIndexes[_proposalId][voter];
-        if (votes[_proposalId][voteIndex].voter == voter) {
+        if (voteIndex < votes[_proposalId].length && votes[_proposalId][voteIndex].voter == voter) {
             votes[_proposalId][voteIndex].optionId = _optionId;
         } else {
             Vote memory newVote = Vote(voter, _optionId);
