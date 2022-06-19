@@ -3,7 +3,7 @@ const HDWalletProvider = require('truffle-hdwallet-provider');
 require('dotenv').config();
 
 function getProvider() {
-  return () => new HDWalletProvider(process.env.MNEMONIC, 'https://dai.poa.network/');
+  return () => new HDWalletProvider(process.env.MNEMONIC, 'https://rpc.gnosischain.com/');
 }
 
 module.exports = {
